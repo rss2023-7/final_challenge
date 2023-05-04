@@ -1,25 +1,32 @@
 import cv2
 import rospy
 
+import sys
+
+sys.path.append('..')
+
 import numpy as np
 from sensor_msgs.msg import Image
-# from DetectStop.msg import Bool
-from std_msgs.msg import Bool
+from final_challenge.msg import StopSign  # TODO check if this is working :(
 from detector import StopSignDetector
+from homography import HomographyTransformer
+
+a = HomographyTransformer()
+print(type(a))
+
 
 class SignDetector:
     def __init__(self):
         self.detector = StopSignDetector()
-        self.publisher = None # TODO probably want to publish to Ackermann Drive
-        self.camera_sub = rospy.Subscriber("/zed/zed_node/rgb/image_rect_color", Image, self.camera_callback)
+        self.publisher = rospy.Publisher("/stop_signs", StopSign, queue_size=10)
+        self.subscriber = rospy.Subscriber("/zed/zed_node/rgb/image_rect_color", Image, self.callback)
 
-        self.detect_stop_sub = rospy.Subscriber("/detect_stop", Bool, self.flag_callback)
         self.detect_stop = True
 
-    def camera_callback(self, img_msg):
+    def callback(self, img_msg):
         # Process image without CV Bridge
         np_img = np.frombuffer(img_msg.data, dtype=np.uint8).reshape(img_msg.height, img_msg.width, -1)
-        bgr_img = np_img[:,:,:-1]
+        bgr_img = np_img[:, :, :-1]
         rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
 
         # reset self.detect_stop if no sign detected
@@ -27,15 +34,33 @@ class SignDetector:
         if not self.detector.predict(img_msg):
             self.detect_stop = True
 
-        #TODO: add logic for calculating distance to the stop sign
+        # logic for calculating distance to the stop sign
         if self.detect_stop:
-            #TODO
+            visible, bounding_box = self.detector.predict(rgb_img)
+            # in_sight = self.detector.predict(rgb_img)[0]
+            # bounding_box = self.detector.draw_box(rgb_img)
 
-    def flag_callback(self, detect_stop):
-        self.detect_stop = detect_stop
+            if visible:
+                u = (bounding_box[0][0] + bounding_box[1][0]) / 2
+                v = (bounding_box[0][1] + bounding_box[1][1]) / 2
+                transformer = HomographyTransformer()
+                distance = transformer.transformUvToXy(u,v)
 
-if __name__=="__main__":
+                Sign = StopSign()
+                Sign.visible = True
+                Sign.distance = distance
+                self.publisher.publish(Sign)
+
+            else:
+                Sign = StopSign()
+                Sign.visible = False
+                Sign.distance = 999.9
+                self.publisher.publish(Sign)
+
+
+
+
+if __name__ == "__main__":
     rospy.init_node("stop_sign_detector")
     detect = SignDetector()
     rospy.spin()
-
