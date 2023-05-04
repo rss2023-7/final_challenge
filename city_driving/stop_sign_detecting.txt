@@ -1,0 +1,6 @@
+HANDLING STOP SIGNS
+
+by default, detect_stops is True
+if we're detecting stops
+    check if a stop sign is visible
+    if so, calculate distance

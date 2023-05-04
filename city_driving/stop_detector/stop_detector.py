@@ -12,6 +12,7 @@ class SignDetector:
         self.detector = StopSignDetector()
         self.publisher = None # TODO probably want to publish to Ackermann Drive
         self.camera_sub = rospy.Subscriber("/zed/zed_node/rgb/image_rect_color", Image, self.camera_callback)
+
         self.detect_stop_sub = rospy.Subscriber("/detect_stop", Bool, self.flag_callback)
         self.detect_stop = True
 
@@ -21,7 +22,12 @@ class SignDetector:
         bgr_img = np_img[:,:,:-1]
         rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
 
-        #TODO:
+        # reset self.detect_stop if no sign detected
+        # might need to make this more robust but this is a good starting point
+        if not self.detector.predict(img_msg):
+            self.detect_stop = True
+
+        #TODO: add logic for calculating distance to the stop sign
         if self.detect_stop:
             #TODO
 
@@ -34,4 +40,4 @@ if __name__=="__main__":
     rospy.spin()
     path = r'/Users/bradyklein/Desktop/RSS/racecar_docker/home/racecar_ws/src/final_challenge/media/stop_sign.jpg'
     img = cv2.imread(path)
-    rospy.loginfo(detect.callback(img))
+    rospy.loginfo(detect.predict(img))
