@@ -38,6 +38,4 @@ if __name__=="__main__":
     rospy.init_node("stop_sign_detector")
     detect = SignDetector()
     rospy.spin()
-    path = r'/Users/bradyklein/Desktop/RSS/racecar_docker/home/racecar_ws/src/final_challenge/media/stop_sign.jpg'
-    img = cv2.imread(path)
-    rospy.loginfo(detect.predict(img))
+

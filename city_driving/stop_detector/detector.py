@@ -76,3 +76,6 @@ def get_bounding_box(df, label='stop sign', threshold=THRESHOLD):
 
 if __name__=="__main__":
     detector = StopSignDetector()
+    path = r'/Users/bradyklein/Desktop/RSS/racecar_docker/home/racecar_ws/src/final_challenge/media/stop_sign.jpg'
+    img = cv2.imread(path)
+    print(detector.predict(img))

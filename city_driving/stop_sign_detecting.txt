@@ -3,4 +3,11 @@ HANDLING STOP SIGNS
 by default, detect_stops is True
 if we're detecting stops
     check if a stop sign is visible
-    if so, calculate distance
+    if so, calculate distance to the sign
+    approach the stopping distance, similar logic to parking in front of the cone
+    once stopped, set detect_stops to False so we start moving again
+    once stop sign is no longer visible, set detect_stops to True (may need to change this to be more robust)
+
+
+for passing info from stop_detector.py -> parking_controller.py, we could either calculate distance with homography
+inside
