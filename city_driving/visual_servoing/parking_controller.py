@@ -3,6 +3,7 @@
 import math
 import rospy
 import numpy as np
+import time
 
 from visual_servoing.msg import ConeLocation, ParkingError
 from ackermann_msgs.msg import AckermannDriveStamped
@@ -27,8 +28,8 @@ class ParkingController():
                                          AckermannDriveStamped, queue_size=10)
         self.error_pub = rospy.Publisher("/parking_error",
                                          ParkingError, queue_size=10)
-        self.x_offset = 0.0 #rospy.get_param("visual_servoing/x_offset")
-        self.y_offset = 0.0 #rospy.get_param("visual_servoing/y_offset")
+        self.x_offset = 0.0 # rospy.get_param("visual_servoing/x_offset")
+        self.y_offset = 0.0 # rospy.get_param("visual_servoing/y_offset")
 
         self.parking_distance = 0.1  # meters; try playing with this number!
         self.error_threshold = 0 # how close or far from the goal we can be without needing to adjust
@@ -36,12 +37,13 @@ class ParkingController():
         self.relative_y = 0
 
         # NEW SHIT FOR FINAL CHALLENGE
+        rospy.Subscriber("/stop_signs", StopSign, self.stop_sign_callback)
         self.detect_stop = True
-        rospy.Subscriber("/stop_signs", StopSign, queue_size=10)
+        self.sign_visible = False
+        self.distance_to_stop_sign = float('inf')
 
 
     def relative_cone_callback(self, msg):
-
 
         self.relative_x = msg.x_pos - self.x_offset
         self.relative_y = msg.y_pos + self.y_offset
@@ -64,26 +66,42 @@ class ParkingController():
         dist_to_cone = math.sqrt(self.relative_x ** 2 + self.relative_y ** 2)
         rospy.loginfo("x = "+str(self.relative_x)+", y = "+str(self.relative_y))
 
-        # what to do when the cone (or line) is not in view
-        if(self.relative_x < 0 or self.relative_x > 3):
+        # NEW SHIT FOR FINAL CHALLENGE - STOP SIGNS
+        if not self.sign_visible:  # resets the sign detecting
+            self.detect_stop = True
+
+        if self.detect_stop and self.sign_visible and 0.75 <= self.distance_to_stop_sign <= 1.0:
+            # MAY WANT TO TWEAK THE STOPPING THRESHOLD DEPENDING ON IRL PERFORMANCE
             drive_cmd.drive.steering_angle = 0.0
             drive_cmd.drive.speed = 0.0
+            self.drive_pub.publish(drive_cmd)
+            self.error_publisher()  # prolly don't need this
+            rospy.sleep(.5)  # wait for half a second at the sign
+            self.detect_stop = False  # this keeps us from stopping forever
 
         else:
-            if (self.relative_x - self.parking_distance) > self.error_threshold:
-                drive_cmd.drive.speed = 1.5
-                drive_cmd.drive.steering_angle = angle
-            elif (self.relative_x - self.parking_distance) < -self.error_threshold:
-                drive_cmd.drive.speed = -0.5
-                drive_cmd.drive.steering_angle = -angle
+            # what to do when the cone (or line) is not in view
+            if(self.relative_x < 0 or self.relative_x > 3):
+                drive_cmd.drive.steering_angle = 0.0
+                drive_cmd.drive.speed = 0.0
             else:
-                drive_cmd.drive.speed = 0
-                drive_cmd.drive.steering_angle = 0
+                if (self.relative_x - self.parking_distance) > self.error_threshold:
+                    drive_cmd.drive.speed = 1.5
+                    drive_cmd.drive.steering_angle = angle
+                elif (self.relative_x - self.parking_distance) < -self.error_threshold:
+                    drive_cmd.drive.speed = -0.5
+                    drive_cmd.drive.steering_angle = -angle
+                else:
+                    drive_cmd.drive.speed = 0
+                    drive_cmd.drive.steering_angle = 0
+            #rospy.loginfo("angle to car = "+str(angle)+", x = "+str(self.relative_x)+", y = "+str(self.relative_y))
+            self.drive_pub.publish(drive_cmd)
+            self.error_publisher()
 
-        #rospy.loginfo("angle to car = "+str(angle)+", x = "+str(self.relative_x)+", y = "+str(self.relative_y))
-
-        self.drive_pub.publish(drive_cmd)
-        self.error_publisher()
+    def stop_sign_callback(self, msg):
+        if msg.visible:
+            self.sign_visible = True
+            self.distance_to_stop_sign = msg.distance
 
     def drive_in_circle(self):
         drive_cmd = AckermannDriveStamped()
