@@ -50,6 +50,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
     FILES
     StopSign.msg
+    ConeLocation.msg
+    ConeLoacationPixel.msg
+    ParkingError.msg
 )
 
 ## Generate services in the 'srv' folder
