@@ -36,7 +36,7 @@ class SignDetector:
 
         # logic for calculating distance to the stop sign
         if self.detect_stop:
-            visible, bounding_box = self.detector.predict(rgb_img)
+            (visible, bounding_box) = self.detector.predict(rgb_img)
             # in_sight = self.detector.predict(rgb_img)[0]
             # bounding_box = self.detector.draw_box(rgb_img)
 

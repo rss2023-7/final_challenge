@@ -17,7 +17,7 @@ for passing info from stop_detector.py -> parking_controller.py, we could either
 inside stop_detector.py or in parking_controller.py. Gonna opt for stop_detector.py so that stop sign
 logic can work with whatever driver we use (parking_controller, pure_pursuit, etc.)
 
-TODO: add logic to handling msgs in the controller
+TODO: test parking controller in RVIZ
 
 TODO: if ML not possible on our car, need to adjust stop_detector.py to use color segmentation
     # might be tricky since stop sign is not entirely red
