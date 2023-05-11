@@ -50,10 +50,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
     FILES
     StopSign.msg
-    ConeLocation.msg
-    ConeLocationPixel.msg
-    ParkingError.msg
-)
+    Point2D.msg
+    )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -105,7 +103,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    CATKIN_DEPENDS rospy std_msgs
+    CATKIN_DEPENDS ackermann_msgs geometry_msgs rospy sensor_msgs std_msgs message_runtime
 #  INCLUDE_DIRS include
 #  LIBRARIES final_challenge
 #  CATKIN_DEPENDS rospy std_msgs
