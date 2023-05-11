@@ -6,6 +6,7 @@ import numpy as np
 
 from visual_servoing.msg import ConeLocation, ParkingError
 from ackermann_msgs.msg import AckermannDriveStamped
+from final_challenge.msg import Point2D
 
 from final_challenge.msg import StopSign
 
@@ -19,7 +20,7 @@ class ParkingController():
 
     def __init__(self):
         # TODO insert correct topic and msg type
-        rospy.Subscriber("/goal_point", TODO,
+        rospy.Subscriber("/goal_point", Point2D,
                          self.lookahead_point_callback)
 
         # set in launch file; different for simulator vs racecar
