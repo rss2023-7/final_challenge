@@ -49,8 +49,8 @@ class ConeDetector():
         cropped_img = image[int(image_height*.4):int(image_height*.85),:,:]
         
         # 2. apply Hough transform to img
-        dst = cv.Canny(image, 50, 200, None, 3)
-        lines = cv.HoughLines(dst, 1, np.pi / 180, 150, None, 0, 0)
+        dst = cv2.Canny(image, 50, 200, None, 3)
+        lines = cv2.HoughLines(dst, 1, np.pi / 180, 150, None, 0, 0)
         
         # 4. determine goal pixel point
 

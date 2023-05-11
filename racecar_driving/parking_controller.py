@@ -18,31 +18,27 @@ class ParkingController():
     """
 
     def __init__(self):
-        rospy.Subscriber("/relative_cone", ConeLocation,
-                         self.relative_cone_callback)
+        # TODO insert correct topic and msg type
+        rospy.Subscriber("/goal_point", TODO,
+                         self.lookahead_point_callback)
 
         # set in launch file; different for simulator vs racecar
         DRIVE_TOPIC = rospy.get_param("~drive_topic")
         self.drive_pub = rospy.Publisher(DRIVE_TOPIC,
                                          AckermannDriveStamped, queue_size=10)
-        self.error_pub = rospy.Publisher("/parking_error",
+        self.error_pub = rospy.Publisher("/parking_error", # TODO change this topic??
                                          ParkingError, queue_size=10)
-        self.x_offset = 0.0 #rospy.get_param("visual_servoing/x_offset")
-        self.y_offset = 0.0 #rospy.get_param("visual_servoing/y_offset")
+        self.x_offset = 0.0  # rospy.get_param("visual_servoing/x_offset")
+        self.y_offset = 0.0  # rospy.get_param("visual_servoing/y_offset")
 
         self.parking_distance = 0.1  # meters; try playing with this number!
         self.error_threshold = 0 # how close or far from the goal we can be without needing to adjust
         self.relative_x = 0
         self.relative_y = 0
 
-        # NEW SHIT FOR FINAL CHALLENGE
-        self.detect_stop = True
-        rospy.Subscriber("/stop_signs", StopSign, queue_size=10)
-
-
-    def relative_cone_callback(self, msg):
-
-
+    def lookahead_point_callback(self, msg):
+        """
+        """
         self.relative_x = msg.x_pos - self.x_offset
         self.relative_y = msg.y_pos + self.y_offset
         if self.relative_y < 0:
@@ -65,7 +61,7 @@ class ParkingController():
         rospy.loginfo("x = "+str(self.relative_x)+", y = "+str(self.relative_y))
 
         # what to do when the cone (or line) is not in view
-        if(self.relative_x < 0 or self.relative_x > 3):
+        if (self.relative_x < 0 or self.relative_x > 3):
             drive_cmd.drive.steering_angle = 0.0
             drive_cmd.drive.speed = 0.0
 

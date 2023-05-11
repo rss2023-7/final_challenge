@@ -36,7 +36,7 @@ class ParkingController():
         self.relative_x = 0
         self.relative_y = 0
 
-        # NEW SHIT FOR FINAL CHALLENGE
+        # NEW SHIT FOR FINAL CHALLENGE - CITY DRIVING
         rospy.Subscriber("/stop_signs", StopSign, self.stop_sign_callback)
         self.detect_stop = True
         self.sign_visible = False
