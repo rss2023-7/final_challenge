@@ -53,6 +53,7 @@ add_message_files(
     ConeLocation.msg
     ConeLocationPixel.msg
     ParkingError.msg
+    Point2D.msg
 )
 
 ## Generate services in the 'srv' folder
