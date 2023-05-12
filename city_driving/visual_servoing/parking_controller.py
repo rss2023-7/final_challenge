@@ -79,6 +79,7 @@ class ParkingController():
             rospy.sleep(.5)  # wait for half a second at the sign
             self.detect_stop = False  # this keeps us from stopping forever
 
+        # OG PARKING CONTROLLER
         else:
             # what to do when the cone (or line) is not in view
             if(self.relative_x < 0 or self.relative_x > 3):
