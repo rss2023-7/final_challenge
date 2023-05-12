@@ -67,7 +67,7 @@ class ParkingController():
         rospy.loginfo("x = "+str(self.relative_x)+", y = "+str(self.relative_y))
 
         # NEW SHIT FOR FINAL CHALLENGE - STOP SIGNS
-        if not self.sign_visible:  # resets the sign detecting
+        if not self.sign_visible or self.distance_to_stop_sign > 1.4:  # resets the sign detecting
             self.detect_stop = True
 
         if self.detect_stop and self.sign_visible and 0.75 <= self.distance_to_stop_sign <= 1.0:
