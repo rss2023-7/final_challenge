@@ -1,0 +1,17 @@
+<launch>
+
+  <node pkg="final_challenge" name="lane_detection" type="lane_detection.py" output="screen">
+  </node>
+
+  <node pkg="final_challenge" name="homography_converter" type="coordinate_converter.py" output="screen">
+  </node>
+
+  <node pkg="final_challenge" name="driver" type="goal_point_driver.py" output="screen">
+  </node>
+
+   <node pkg="final_challenge" name="safety_controller" type="safety_controller.py" output="screen">
+  </node>
+
+  <include file="$(find zed_wrapper)/launch/zed.launch"/>
+
+</launch>

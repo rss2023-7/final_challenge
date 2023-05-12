@@ -31,19 +31,21 @@ class SafetyController:
     def enforce_safety(self, drive_input):
         instr = drive_input.drive
         if instr.speed > 0:
-            angle = instr.angle
+            angle = instr.steering_angle
             scan = self.LASER_DATA
             pts = scan.ranges
             angle_min = scan.angle_min
             angle_increment = scan.angle_increment
             #get dir car is facing and check 10% around it
+            pct = .05
             midpoint = round((angle - angle_min)/angle_increment)
-            start = max(0, round(midpoint - len(pts)/10))
-            end = min(len(pts) - 1, round(midpoint + len(pts)/10))
+            start = int(max(0, round(midpoint - len(pts)*pct)))
+            end = int(min(len(pts) - 1, round(midpoint + len(pts)*pct)))
             #check if car is > 1 sec from object
             closest_dist = min(pts[start:end])
             time = 1/instr.speed * closest_dist
-            if time <= 1:
+            if time <= 0.5:
+                rospy.loginfo("controller says STOP")
                 self.safety_controller_pub.publish(self.brake_msg)
 
     def save_laser_data(self, laser_data):
