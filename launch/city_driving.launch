@@ -12,6 +12,9 @@
 
   <node pkg="final_challenge" name="stop_detector" type="city_driving/stop_detector/stop_detector.py" output="screen">
   </node>
+  
+  <node pkg="final_challenge" name="cone_detector" type="cone_detector.py" output="screen">
+  </node>
 
   <node pkg="final_challenge" name="homography" type="city_driving/stop_detector/homography.py" output="screen">
   </node>
