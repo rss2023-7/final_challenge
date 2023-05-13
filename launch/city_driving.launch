@@ -5,21 +5,18 @@
 
 <!--  <node pkg="final_challenge" name="safety_controller" type="safety_controller.py" output="screen">-->
 <!--  </node>-->
-
-  <node pkg="final_challenge" name="parking_controller" type="city_driving/visual_servoing/parking_controller.py" output="screen">
-  	<param name="drive_topic" value="/vesc/ackermann_cmd_mux/input/navigation" />
-  </node>
-
-  <node pkg="final_challenge" name="stop_detector" type="city_driving/stop_detector/stop_detector.py" output="screen">
-  </node>
   
-  <node pkg="final_challenge" name="cone_detector" type="cone_detector.py" output="screen">
-  </node>
+  <include file="$(find racecar_simulator)/launch/simulate.launch"/>
+  
+  <!-- use this line for simulation -->
+  <include file="$(find localization)/launch/localize.launch"/>
+  <!-- use this line for real world -->
+  <include file="$(find localization)/launch/localize_real_env.launch"/>
 
-  <node pkg="final_challenge" name="homography" type="city_driving/stop_detector/homography.py" output="screen">
-  </node>
+  <node pkg="final_challenge" name="path_planner" type="city_driving/path_planning/path_planning.py" output="screen" />
 
-  <node pkg="image_transport" name="republish" type="republish" args="raw in:=/cone_debug_img out:=/cone_debug_img_compressed" output="screen">
-  </node>
+  <node pkg="final_challenge" name="path_follower" type="city_driving/path_planning/path_follower.py" output="screen" />
+  
+  <node pkg="image_transport" name="republish" type="republish" args="raw in:=/cone_debug_img out:=/cone_debug_img_compressed" output="screen" />
 
 </launch>
