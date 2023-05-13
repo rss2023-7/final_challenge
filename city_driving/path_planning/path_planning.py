@@ -4,6 +4,7 @@ import rospy
 import numpy as np
 from geometry_msgs.msg import PoseStamped, PoseArray
 from nav_msgs.msg import Odometry, OccupancyGrid
+from std_msgs.msg import Header
 import rospkg
 import time, os
 from utils import LineTrajectory
@@ -31,18 +32,25 @@ class PathPlan(object):
         self.resolution = None
         self.origin = None
         self.is_planning = False
+
+        # FINAL CHALLENGE SHIT
+        self.max_clicks = 2
+        self.poses_received = [] # initialize with self.start
+        self.multiple_trajs = []
         # self.rng = np.random.default_rng()
 
-        self.odom_topic = rospy.get_param("~odom_topic")
+        # self.odom_topic = rospy.get_param("~odom_topic")
         self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_cb)
         self.trajectory = LineTrajectory("/planned_trajectory")
         self.goal_sub = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.goal_cb, queue_size=10)
         self.traj_pub = rospy.Publisher("/trajectory/current", PoseArray, queue_size=10)
-        self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self.odom_cb)
+        #self.traj_pub = rospy.Publisher("/planned_trajectory/path", PoseArray, queue_size=10)
+        # self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self.odom_cb)
+        self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_cb)
 
 
     def map_cb(self, msg):
-        new_map = ndimage.binary_dilation(np.array(msg.data).reshape(msg.info.height, msg.info.width).T, iterations=12).astype(float) * 100
+        new_map = ndimage.binary_dilation(np.array(msg.data).reshape(msg.info.height, msg.info.width).T, iterations=18).astype(float) * 100
         new_resolution = msg.info.resolution
         new_origin = self.get_origin(msg.info.origin)
         if self.map is None or self.map != new_map or self.res is None or self.resolution != new_resolution or self.origin is None or self.origin != new_origin:
@@ -56,11 +64,29 @@ class PathPlan(object):
     def odom_cb(self, msg):
         new_start = self.get_pose(msg.pose.pose)
         if self.start != new_start:
+            rospy.loginfo("\n\n--new start point initialized--\n")
+            self.poses_received = [msg.pose.pose] # initialize poses_received with the start point
+            rospy.loginfo(self.poses_received)
             self.start = new_start
             self.try_plan_path()
 
 
     def goal_cb(self, msg):
+        self.poses_received.append(msg.pose)  # keeps track of endpoints we've added so far
+        rospy.loginfo("\n\n--update to poses_received--\n")
+        rospy.loginfo(self.poses_received)
+
+        if len(self.poses_received) == (self.max_clicks + 1):
+            rospy.loginfo('\n\n--max clicks reached--\n')
+            for i in range(len(self.poses_received) - 1):
+                # rospy.loginfo("first pose" + str(self.poses_received[i]))
+                # rospy.loginfo("second pose" + str(self.poses_received[i+1]))
+                self.multiple_trajs.append(self.plan_path(self.get_pose(self.poses_received[i]),
+                                                          self.get_pose(self.poses_received[i+1]),
+                                                          self.map))
+
+            self.combine_trajs()  # this create one overall trajectory and publish it
+
         new_end = self.get_pose(msg.pose)
         if self.end != new_end:
             print("got end")
@@ -130,6 +156,24 @@ class PathPlan(object):
         return cells
 
 
+    def combine_trajs(self):
+        rospy.loginfo("\n\n--combine the trajectories--\n")
+        combined_trajectory = PoseArray()
+        combined_trajectory.header = Header()
+        combined_trajectory.header.frame_id = "/map"
+        combined_trajectory.poses = []
+
+
+
+        for pose_array in self.multiple_trajs:
+            combined_trajectory.poses += pose_array.poses  # add all poses from a pose array to the combined pose array
+
+        rospy.loginfo('\n\n--NEW TRAJECTORY--\n')
+        # self.trajectory.publish_viz()
+        # rospy.loginfo(combined_traj)
+        self.traj_pub.publish(combined_trajectory)
+
+
     def plan_path(self, start_point, end_point, map):
         ## CODE FOR PATH PLANNING ##
         print("planning path")
@@ -188,10 +232,11 @@ class PathPlan(object):
             i += 1
         
         # publish trajectory
-        self.traj_pub.publish(self.trajectory.toPoseArray())
+        # self.traj_pub.publish(self.trajectory.toPoseArray())
+        # return self.trajectory.toPoseArray()
 
         # visualize trajectory Markers
-        self.trajectory.publish_viz()
+        # self.trajectory.publish_viz()
 
         self.is_planning = False
 
